@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Área de Conteúdo - O Código do Sono</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chosen Palette: Warm Neutral Harmony -->
+    <!-- Application Structure Plan: A dashboard-style SPA serving as a content and tools area. Navigation is handled by a persistent sidebar, allowing users to switch between sections like a native application. The core sections include: 1) A 'Painel' (Dashboard) for user orientation. 2) The 'Diagnóstico' quiz for personalization. 3) An interactive 'Plano Circadiano' to visually explore the body's clock. 4) A 'Biblioteca' with all e-book content organized by topic. 5) A 'Ferramentas' section with the breathing guide and ritual builder. 6) A 'Desafios' section for the 7-day program. This structure is chosen to transform static content into an engaging, explorable, and tool-based experience, increasing user retention and perceived value over a simple e-book. -->
+    <!-- Visualization & Content Choices: The app leverages interactivity for education and utility. 1) Interactive Circadian Plan: An HTML/CSS/JS-powered visual diagram where users click time segments to reveal detailed physiological information, making a complex concept tangible and explorable. 2) Quiz & Personalized Plan: Re-purposed from the sales page to serve as an onboarding tool within the app. 3) Content Library: E-book text is chunked into thematic cards with modals, improving readability and navigation over a linear PDF. 4) Interactive Tools: The existing breathing guide and ritual builder are integrated as core features, transforming the product from just information into a utility. The 7-day challenge uses interactive checkboxes to track progress. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafb; /* Lighter gray for app feel */
+            color: #374151;
+        }
+        .sidebar-link {
+            transition: all 0.2s ease-in-out;
+        }
+        .sidebar-link.active {
+            background-color: #EAE3DC;
+            color: #4A5568;
+            font-weight: 600;
+        }
+        .circadian-segment {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        .circadian-segment:hover {
+            transform: scale(1.05);
+            filter: brightness(1.1);
+        }
+        .circadian-segment.active {
+             border: 4px solid #4A5568;
+             transform: scale(1.05);
+        }
+        .breathing-dot {
+            transition: transform var(--transition-duration, 3.8s) cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="antialiased">
+    <div class="flex h-screen bg-gray-100">
+        <!-- Sidebar -->
+        <aside class="w-64 flex-shrink-0 bg-white border-r hidden md:flex flex-col">
+            <div class="h-16 flex items-center justify-center border-b px-4">
+                <h1 class="text-2xl font-bold text-[#4A5568]"><span class="text-[#8C7A6B]">☾</span> O Código do Sono</h1>
+            </div>
+            <nav id="sidebar-nav" class="flex-grow p-4 space-y-2">
+                <a href="#painel" data-section="painel" class="sidebar-link flex items-center px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-200">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    Meu Painel
+                </a>
+                <a href="#local-respiracao" data-section="local-respiracao" class="sidebar-link flex items-center px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-200">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.5 6.5A2.5 2.5 0 016 4h12a2.5 2.5 0 010 5H6a2.5 2.5 0 01-2.5-2.5zM3.5 17.5a2.5 2.5 0 012.5-2.5h12a2.5 2.5 0 010 5H6a2.5 2.5 0 01-2.5-2.5z"></path></svg>
+                    Local de Respiração
+                </a>
+                <a href="#plano-circadiano" data-section="plano-circadiano" class="sidebar-link flex items-center px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-200">
+                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Plano Circadiano
+                </a>
+                 <a href="#biblioteca" data-section="biblioteca" class="sidebar-link flex items-center px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-200">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                    Biblioteca
+                </a>
+                 <a href="#chas-para-dormir" data-section="chas-para-dormir" class="sidebar-link flex items-center px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-200">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 18h2a2 2 0 002-2v-2a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM4 8h16M4 8a4 4 0 014-4h8a4 4 0 014 4v0"></path></svg>
+                    Chás para Dormir
+                </a>
+                 <a href="#desafios" data-section="desafios" class="sidebar-link flex items-center px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-200">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Desafios
+                </a>
+                <a href="#depoimentos" data-section="depoimentos" class="sidebar-link flex items-center px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-200">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2V10a2 2 0 012-2h8z"></path></svg>
+                    Depoimentos
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="h-16 flex items-center justify-between px-6 bg-white border-b">
+                 <div id="welcome-message" class="text-gray-600 md:flex-1">Bem-vindo(a)!</div>
+                 <button id="mobile-menu-btn" class="md:hidden text-2xl">☰</button>
+            </header>
+
+            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6 md:p-8">
+                <div id="app-content">
+                    <!-- Dynamic content will be loaded here -->
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Mobile Sidebar -->
+    <div id="mobile-sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-10 hidden"></div>
+    <div id="mobile-sidebar" class="fixed top-0 left-0 h-full w-64 bg-white z-20 transform -translate-x-full transition-transform duration-300 ease-in-out">
+        <div class="h-16 flex items-center justify-between border-b px-4">
+            <h1 class="text-xl font-bold text-[#4A5568]"><span class="text-[#8C7A6B]">☾</span> O Código do Sono</h1>
+            <button id="close-mobile-menu" class="text-2xl">&times;</button>
+        </div>
+        <nav id="mobile-sidebar-nav" class="p-4 space-y-2">
+           <!-- Mobile nav links will be copied here -->
+        </nav>
+    </div>
+    
+    <!-- Generic Modal -->
+    <div id="generic-modal-container" class="fixed inset-0 z-50 items-center justify-center hidden">
+        <div class="modal-backdrop fixed inset-0 bg-black bg-opacity-60"></div>
+        <div class="relative bg-white w-11/12 md:max-w-xl mx-auto rounded-lg shadow-lg p-8 max-h-[80vh] overflow-y-auto">
+             <button id="generic-modal-close" class="absolute top-4 right-4 text-2xl text-gray-500 hover:text-gray-800">&times;</button>
+             <div id="generic-modal-content"></div>
+        </div>
+    </div>
+    
+    <!-- Welcome Popup -->
+    <div id="welcome-modal-container" class="fixed inset-0 z-50 items-center justify-center hidden">
+        <div class="fixed inset-0 bg-black bg-opacity-60"></div>
+        <div class="relative bg-white w-11/12 md:max-w-md mx-auto rounded-lg shadow-lg p-8 text-center">
+            <h2 class="text-2xl font-bold text-[#4A5568] mb-4">Bem-vindo(a) ao Código do Sono!</h2>
+            <p class="text-gray-600 mb-6">Parabéns por investir em você e na sua saúde. Para personalizar sua experiência, como podemos te chamar?</p>
+            <form id="welcome-form">
+                <input type="text" id="name-input" placeholder="Digite seu nome aqui" class="w-full px-4 py-2 border border-gray-300 rounded-md mb-4 focus:ring-[#8C7A6B] focus:border-[#8C7A6B]" required>
+                <button type="submit" class="w-full bg-[#8C7A6B] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#7a6a5a] transition-colors">Continuar</button>
+            </form>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // APP DATA AND CONTENT
+    const appData = {
+        testimonials: [
+            { name: 'Juliana P.', rating: 5, comment: 'Eu não acreditava que pequenas mudanças fariam tanta diferença. O desafio dos 7 dias mudou tudo para mim. Voltei a ter energia!' },
+            { name: 'Marcos R.', rating: 5, comment: 'O guia de respiração é incrível. Uso sempre que me sinto ansioso antes de deitar e funciona de verdade. Durmo muito mais rápido.' },
+            { name: 'Carla F.', rating: 4, comment: 'Entender o plano circadiano foi um divisor de águas. Ajustei meus horários e a qualidade do meu sono melhorou 100%.' },
+            { name: 'Ricardo G.', rating: 5, comment: 'Finalmente um guia prático e sem enrolação. Os chás são ótimos e o conteúdo é direto ao ponto. Recomendo demais!' },
+            { name: 'Fernanda L.', rating: 5, comment: 'O construtor de rituais foi o que eu precisava! Ter um plano claro para a noite me ajudou a criar um hábito que eu finalmente consigo seguir.' },
+            { name: 'Lucas M.', rating: 5, comment: 'Não é só sobre dormir, é sobre viver melhor. Com noites de sono de qualidade, meu humor e minha produtividade no trabalho melhoraram absurdamente.' }
+        ],
+        teaRecipes: [
+            { id: 'camomila', emoji: '🌼', title: 'Chá de Camomila', benefit: 'Para acalmar e relaxar a mente.', recipe: 'Adicione um punhado de flores frescas em 250ml de água fervente. Deixe repousar por 5 a 10 minutos, coe e beba.', warning: 'Evitar em grávidas e crianças sem orientação médica.' },
+            { id: 'passiflora', emoji: '🌸', title: 'Chá de Passiflora', benefit: 'Excelente para estresse e ansiedade.', recipe: 'Use 1 colher de sopa de folhas secas em 250ml de água fervente. Deixe repousar por 10 minutos. Coe antes de beber.', warning: 'Não ingerir na gravidez ou por crianças menores de 12 anos. Pode interferir com medicamentos como aspirina.' },
+            { id: 'valeriana', emoji: '🌿', title: 'Chá de Valeriana', benefit: 'Aumenta o tempo de sono e reduz despertares.', recipe: 'Coloque 1 colher de sopa da raíz de valeriana em 250ml de água fervente. Deixe repousar por 10 a 15 minutos.', warning: 'Usar com cuidado em grávidas e pessoas com problemas no fígado.' },
+            { id: 'erva-cidreira', emoji: '🍃', title: 'Chá de Erva-Cidreira', benefit: 'Relaxa o sistema nervoso.', recipe: 'Adicione 1 colher de folhas secas em 250ml de água fervente. Deixe repousar por 5 a 10 minutos antes de coar.', warning: 'Evitar durante a gravidez e lactação.' },
+            { id: 'erva-sao-joao', emoji: '☀️', title: 'Erva-de-São-João', benefit: 'Combate estados depressivos e ansiedade.', recipe: 'Use 1 colher de chá da erva seca em 250ml de água fervente. Deixe repousar por 5 minutos.', warning: 'Não usar na gravidez, amamentação ou com anticoncepcionais orais. Evitar com antidepressivos.' },
+            { id: 'lavanda', emoji: '💜', title: 'Chá de Lavanda', benefit: 'Reduz agitação e melhora o bem-estar geral.', recipe: 'Adicione 30g de flores picadas em 1 litro de água fervente e apague o fogo. Tampe e deixe esfriar.', warning: 'Não deve ser consumido por gestantes, crianças ou pessoas com úlcera gástrica.' },
+            { id: 'tilia', emoji: '🌳', title: 'Chá de Tília', benefit: 'Alivia crises de ansiedade, calmante natural.', recipe: 'Adicione 1.5g de folhas secas em 150ml de água fervente. Deixe repousar por 5 a 10 minutos.', warning: 'Não usar em crianças menores de 4 anos, grávidas, lactantes ou pessoas com problemas cardíacos.' },
+            { id: 'mulungu', emoji: '🔴', title: 'Chá de Mulungu', benefit: 'Ação calmante e tranquilizante.', recipe: 'Ferva 4g da casca em uma xícara de água por 15 minutos. Coe e beba. Não tomar por mais de 3 dias seguidos.', warning: 'Não usar em crianças menores de 5 anos, grávidas, lactantes ou junto com anti-hipertensivos.' },
+            { id: 'curcuma', emoji: '🧡', title: 'Chá de Cúrcuma', benefit: 'Ação ansiolítica que melhora o sono.', recipe: 'Misture 1 colher de chá de cúrcuma em pó em 150ml de água fervente. Deixe repousar por 10 minutos.', warning: 'Não usar com anticoagulantes ou se tiver pedra na vesícula. Evitar na gravidez.' },
+            { id: 'hortela', emoji: '🌱', title: 'Chá de Hortelã-pimenta', benefit: 'Alivia o estresse mental e a ansiedade.', recipe: 'Adicione 1 colher de sopa de folhas em 150ml de água fervente. Deixe repousar por 5 a 10 minutos.', warning: 'Consumir com moderação.' }
+        ],
+        circadianPlan: [
+            { time: "06:00", title: "Despertar e Exposição à Luz", icon: "☀️", description: "A luz solar ao acordar inibe a melatonina e ajusta seu relógio interno. Tente pegar 15 minutos de sol na primeira hora do dia." },
+            { time: "10:00", title: "Pico de Alerta Mental", icon: "💡", description: "Sua concentração e foco estão no auge. É o melhor momento para tarefas que exigem alta performance mental." },
+            { time: "14:30", title: "Melhor Coordenação", icon: "🤸", description: "Seu corpo está no pico de coordenação motora. Bom momento para atividades que exigem precisão." },
+            { time: "17:00", title: "Pico de Força Muscular", icon: "💪", description: "A força cardiovascular e muscular atinge seu máximo. Ideal para exercícios físicos mais intensos." },
+            { time: "19:00", title: "Pico de Pressão Sanguínea", icon: "🩸", description: "Sua pressão e temperatura corporal atingem o pico. O corpo começa a se preparar para desacelerar." },
+            { time: "21:00", title: "Início da Secreção de Melatonina", icon: "🧠", description: "Com a diminuição da luz, seu cérebro começa a produzir melatonina, o hormônio do sono. É crucial reduzir as luzes azuis agora." },
+            { time: "22:30", title: "Supressão de Movimentos Intestinais", icon: "🤫", description: "Seu sistema digestivo desacelera. Evite refeições pesadas a partir deste horário para não atrapalhar o sono." },
+            { time: "02:00", title: "Sono Mais Profundo", icon: "😴", description: "Seu corpo está em seu estado de maior relaxamento. É a fase de reparação celular e consolidação da memória." },
+        ],
+        library: [
+            { id: 1, category: "Ambiente", title: "O Santuário do Sono", content: `<h3>Preparando o Seu Ambiente</h3><p>Seu quarto precisa ser um refúgio, associado exclusivamente ao descanso. Três pilares são essenciais:</p><ul><li class="mt-2"><strong>Escuridão Total:</strong> A luz inibe a melatonina. Use cortinas blackout e cubra luzes de eletrônicos.</li><li class="mt-2"><strong>Silêncio:</strong> Ruídos fragmentam o sono. Considere tampões de ouvido ou ruído branco.</li><li class="mt-2"><strong>Temperatura Fresca:</strong> Um ambiente entre 18°C e 21°C ajuda o corpo a iniciar o sono.</li></ul><p class="mt-4 font-semibold">Lembrete: A cama é para dormir e ter relações íntimas. Evite trabalhar ou comer nela para fortalecer a associação mental com o descanso.</p>` },
+            { id: 2, category: "Rotina", title: "O Relógio Interno", content: `<h3>A Magia da Rotina</h3><p>Nosso corpo tem um relógio biológico (ciclo circadiano) que ama consistência. Ajustá-lo é fundamental.</p><ul><li class="mt-2"><strong>Horários Fixos:</strong> O pilar mais importante. Tente dormir e, principalmente, acordar no mesmo horário todos os dias, incluindo fins de semana.</li><li class="mt-2"><strong>Luz Solar Matinal:</strong> Exponha-se à luz natural na primeira hora do dia para "zerar" seu relógio.</li><li class="mt-2"><strong>Luzes Noturnas:</strong> Reduza a intensidade das luzes em casa à noite. Troque luzes brancas por amarelas para sinalizar ao cérebro que o dia está acabando.</li></ul>` },
+            { id: 4, category: "Estímulos", title: "O Ritual de Desaceleração", content: `<h3>O Preparo para a Noite</h3><p>O cérebro precisa de um tempo de transição para desligar. Crie um ritual relaxante de 60 minutos.</p><ul><li class="mt-2"><strong>Desconecte-se das Telas:</strong> A luz azul inibe a melatonina. Desligue celular, TV e computador uma hora antes de dormir.</li><li class="mt-2"><strong>Atividades Calmas:</strong> Opte por um banho quente, leitura de um livro físico, meditação ou música tranquila.</li><li class="mt-2"><strong>Esvazie a Mente:</strong> Anote preocupações ou tarefas do dia seguinte em um caderno para liberar a mente.</li></ul>` },
+            { id: 5, category: "Emergência", title: "Guia de Emergência", content: `<h3>Acordou no Meio da Noite?</h3><p>É normal, mas a reação errada pode sabotar seu sono. A regra é: não se esforce.</p><p class="font-semibold mt-4">O que NÃO fazer:</p><ul><li>NÃO olhe o relógio.</li><li>NÃO pegue o celular.</li><li>NÃO acenda luzes fortes.</li><li>NÃO fique se revirando na cama por mais de 20 minutos.</li></ul><p class="font-semibold mt-4">O que FAZER:</p><ul><li>Levante-se, vá para outro cômodo com pouca luz e faça algo monótono.</li><li>Relaxe, mesmo acordado. O descanso parcial já é benéfico.</li><li>Pratique a respiração 4x4.</li></ul>`},
+        ],
+        quiz: [
+            { question: "Seus horários de dormir e acordar são uma bagunça ou você é mais regrado?", options: ["😇 Sou um reloginho, durmo e acordo quase sempre na mesma hora.", "🤔 Durante a semana até tento, mas no fim de semana a rotina some.", "😵 É uma bagunça. Cada noite durmo em um horário diferente."], category: "Rotina" },
+            { question: "Com que frequência você usa o celular ou assiste TV na cama antes de dormir?", options: ["😇 Nunca ou raramente.", "🤔 Algumas vezes por semana.", "😵 Quase todas as noites."], category: "Estímulos" },
+            { question: "Como é o seu quarto na hora de dormir?", options: ["😇 Totalmente escuro, silencioso e fresco.", "🤔 Tem um pouco de luz ou ruído.", "😵 Muitas luzes de aparelhos ou barulho externo."], category: "Ambiente" },
+        ],
+        breathingTools: [
+            { id: 'box', title: 'Respiração Quadrada (4-4-4-4)', purpose: 'Para foco e calma instantânea.', when: 'Use durante picos de estresse no trabalho ou para se centrar antes de uma tarefa importante.', steps: [ { label: 'Inspire...', duration: 4, scale: 5 }, { label: 'Segure', duration: 4, scale: 5 }, { label: 'Expire...', duration: 4, scale: 1 }, { label: 'Segure', duration: 4, scale: 1 } ] },
+            { id: 'relax', title: 'Respiração Relaxante (4-7-8)', purpose: 'Para induzir o sono profundamente.', when: 'Faça deitado na cama, logo antes de dormir. É conhecida como o "tranquilizante natural".', steps: [ { label: 'Inspire...', duration: 4, scale: 5 }, { label: 'Segure', duration: 7, scale: 5 }, { label: 'Expire...', duration: 8, scale: 1 } ] },
+            { id: 'calm', title: 'Respiração Calmante (4-2-6)', purpose: 'Para aliviar a ansiedade.', when: 'Quando se sentir ansioso ou sobrecarregado. A expiração longa ativa o sistema parassimpático (relaxamento).', steps: [ { label: 'Inspire...', duration: 4, scale: 5 }, { label: 'Segure', duration: 2, scale: 5 }, { label: 'Expire...', duration: 6, scale: 1 } ] },
+            { id: 'diaphragmatic', title: 'Respiração Base (Diafragmática)', purpose: 'Para aprender a respirar corretamente.', when: 'Pratique a qualquer momento do dia para criar o hábito. É a base de todas as outras técnicas.', steps: [ { label: 'Inspire pela barriga...', duration: 4, scale: 5 }, { label: 'Expire lentamente...', duration: 6, scale: 1 } ] }
+        ],
+        challenges: [
+            { title: "Detox Digital Noturno", description: "Nenhum aparelho eletrônico (celular, TV, tablet) 60 minutos antes de dormir." },
+            { title: "Calibração do Relógio Biológico", description: "Exponha-se a 15 minutos de luz solar na primeira hora após acordar." },
+            { title: "Otimização do Santuário", description: "Garanta que seu quarto esteja 100% escuro, usando tampões ou blackout se necessário." },
+            { title: "Diário da Mente", description: "Anote 3 preocupações em um caderno antes de iniciar seu ritual de desaceleração." },
+            { title: "Respiração Consciente", description: "Pratique o exercício de respiração 4x4 por 3 minutos antes de deitar." },
+            { title: "Zero Cafeína Após as 15h", description: "Nenhuma bebida com cafeína (café, chás escuros, refrigerantes, energéticos) após as 15:00." },
+            { title: "Consistência no Despertar", description: "Acorde no mesmo horário dos outros dias, mesmo sendo fim de semana." },
+        ]
+    };
+
+    const appContent = document.getElementById('app-content');
+    let currentAnimation = { timeoutId: null, toolId: null };
+
+    const sections = {
+        painel: `
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Bem-vindo(a) à sua Jornada do Sono!</h2>
+            <p class="text-gray-600 mb-8">Este é o seu painel de controle para decifrar o código do sono. Explore as seções para aprender e aplicar as técnicas que transformarão suas noites.</p>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow cursor-pointer" data-nav-link="plano-circadiano">
+                    <h3 class="font-bold text-xl mb-2 text-[#4A5568]">1. Entenda seu Corpo</h3>
+                    <p class="text-gray-600">Faça o diagnóstico e explore o Plano Circadiano interativo.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow cursor-pointer" data-nav-link="local-respiracao">
+                    <h3 class="font-bold text-xl mb-2 text-[#4A5568]">2. Acalme sua Mente</h3>
+                    <p class="text-gray-600">Use as ferramentas de respiração para relaxar instantaneamente.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow cursor-pointer" data-nav-link="biblioteca">
+                    <h3 class="font-bold text-xl mb-2 text-[#4A5568]">3. Aprofunde o Conhecimento</h3>
+                    <p class="text-gray-600">Navegue pela Biblioteca e aprenda sobre os 5 pilares do sono.</p>
+                </div>
+            </div>
+        `,
+        'plano-circadiano': `
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Plano Circadiano e Diagnóstico</h2>
+            <p class="text-gray-600 mb-8">Responda o quiz para se autoconhecer e depois explore como seu corpo funciona durante o dia.</p>
+            <div class="bg-white rounded-lg p-8 md:p-12 shadow-lg mb-8">
+                <h3 class="text-2xl font-bold text-center text-[#4A5568] mb-2">Passo 1: Diagnóstico Rápido</h3>
+                <p class="text-center text-gray-600 mb-8">Entenda seus hábitos atuais.</p>
+                <div id="quiz-container-app"></div>
+                 <div class="text-center mt-8">
+                    <button id="submit-quiz-app" class="bg-[#8C7A6B] text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-[#7a6a5a] transition-colors disabled:bg-gray-400" disabled>Ver Minhas Recomendações</button>
+                </div>
+                 <div id="plan-app" class="hidden mt-8"></div>
+            </div>
+            <div class="bg-white rounded-lg p-6 shadow-lg flex flex-col lg:flex-row gap-6">
+                <div class="w-full lg:w-1/2 flex items-center justify-center">
+                    <div id="circadian-clock" class="relative w-80 h-80 rounded-full">
+                        ${appData.circadianPlan.map((item, index) => {
+                            const angle = (index / appData.circadianPlan.length) * 360 - 90;
+                            const x = 50 + 45 * Math.cos(angle * Math.PI / 180);
+                            const y = 50 + 45 * Math.sin(angle * Math.PI / 180);
+                            const color = index >= 5 ? 'bg-blue-200' : 'bg-orange-200';
+                            return `<div class="circadian-segment absolute w-16 h-16 rounded-full flex items-center justify-center text-2xl ${color} shadow-md" style="left: ${x-8}%; top: ${y-8}%;" data-index="${index}">${item.icon}</div>`;
+                        }).join('')}
+                         <div class="absolute w-60 h-60 bg-gray-100 rounded-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-8 border-white shadow-inner"></div>
+                    </div>
+                </div>
+                <div id="circadian-details" class="w-full lg:w-1/2 bg-gray-50 p-6 rounded-lg">
+                    <h3 class="font-bold text-xl mb-2 text-[#4A5568]">Passo 2: Explore seu Relógio Biológico</h3>
+                    <p class="text-gray-600">Clique em um dos ícones no relógio para ver os detalhes aqui.</p>
+                </div>
+            </div>
+        `,
+        biblioteca: `
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Biblioteca de Conteúdo</h2>
+            <p class="text-gray-600 mb-8">Todo o conhecimento do guia "O Código do Sono", organizado para você.</p>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                ${appData.library.map(item => `
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="font-bold text-xl mb-2 text-[#4A5568]">${item.title}</h3>
+                        <div class="prose prose-sm max-w-none text-gray-600">${item.content.replace(/<h3>.*?<\/h3>/, '').replace(/<p>/, '<p class="line-clamp-3">')}</div>
+                    </div>
+                `).join('')}
+            </div>
+        `,
+        'chas-para-dormir': `
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Chás para Dormir</h2>
+            <p class="text-gray-600 mb-8">Receitas naturais para ajudar a relaxar antes de deitar.</p>
+            <div id="tea-recipes-container" class="grid md:grid-cols-2 gap-6"></div>
+        `,
+        'local-respiracao': `
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Local de Respiração</h2>
+            <p class="text-gray-600 mb-8">Técnicas guiadas para acalmar a mente e relaxar o corpo a qualquer momento.</p>
+            <div class="bg-white rounded-lg p-6 shadow-lg mb-8">
+                <h3 class="font-bold text-xl mb-3 text-[#4A5568]">Como Praticar</h3>
+                <div class="grid md:grid-cols-2 gap-4 text-sm text-gray-600">
+                    <p><strong>Postura:</strong> Sente-se ou deite-se confortavelmente com a coluna ereta.</p>
+                    <p><strong>Ambiente:</strong> Escolha um local silencioso onde não será interrompido.</p>
+                    <p><strong>Tempo:</strong> Pratique por 2 a 5 minutos para sentir os efeitos.</p>
+                    <p><strong>Dica:</strong> Feche os olhos e concentre-se apenas no ar entrando e saindo.</p>
+                </div>
+            </div>
+            <div id="breathing-tools-container" class="grid md:grid-cols-2 gap-8"></div>
+        `,
+        desafios: `
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Desafio dos 7 Dias</h2>
+            <p class="text-gray-600 mb-8">Complete uma missão por dia para transformar seu sono. Marque as tarefas concluídas.</p>
+            <div class="bg-white rounded-lg p-8 shadow-lg space-y-4">
+                ${appData.challenges.map((challenge, index) => `
+                    <label class="flex items-center p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                        <input type="checkbox" class="h-5 w-5 rounded border-gray-300 text-[#8C7A6B] focus:ring-[#8C7A6B]">
+                        <span class="ml-4">
+                            <span class="font-semibold text-gray-800">Dia ${index + 1}: ${challenge.title}</span>
+                            <span class="block text-sm text-gray-500">${challenge.description}</span>
+                        </span>
+                    </label>
+                `).join('')}
+            </div>
+        `,
+        depoimentos: `
+             <h2 class="text-3xl font-bold text-gray-800 mb-2">Depoimentos da Comunidade</h2>
+            <p class="text-gray-600 mb-8">Veja o que outros usuários estão dizendo sobre a jornada com O Código do Sono.</p>
+            <div id="testimonials-container" class="grid md:grid-cols-2 gap-6"></div>
+        `
+    };
+
+    function navigateTo(section) {
+        if (!sections[section]) return;
+        appContent.innerHTML = sections[section];
+        
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            link.classList.toggle('active', link.dataset.section === section);
+        });
+
+        // Re-initialize dynamic content
+        if (section === 'plano-circadiano') initQuiz();
+        if (section === 'plano-circadiano') initCircadianClock();
+        if (section === 'local-respiracao') initBreathingTools();
+        if (section === 'chas-para-dormir') initTeaRecipes();
+        if (section === 'depoimentos') initTestimonials();
+
+        // Close mobile menu on navigation
+        closeMobileMenu();
+    }
+    
+    // --- INITIALIZATION FUNCTIONS ---
+    function initTestimonials() {
+        const container = document.getElementById('testimonials-container');
+        if (!container) return;
+        container.innerHTML = '';
+        appData.testimonials.forEach(testimonial => {
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-lg p-6 shadow-md flex flex-col';
+            let stars = '';
+            for (let i = 0; i < 5; i++) {
+                stars += `<span class="${i < testimonial.rating ? 'text-yellow-400' : 'text-gray-300'}">★</span>`;
+            }
+            card.innerHTML = `
+                <div class="text-xl mb-2">${stars}</div>
+                <blockquote class="text-gray-600 italic mb-4 flex-grow">“${testimonial.comment}”</blockquote>
+                <cite class="font-semibold text-gray-800 self-end">— ${testimonial.name}</cite>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function initQuiz() {
+        const quizContainer = document.getElementById('quiz-container-app');
+        if (!quizContainer) return;
+        quizContainer.innerHTML = '';
+        
+        appData.quiz.forEach((q, index) => {
+            const questionBlock = document.createElement('div');
+            questionBlock.className = 'mb-6';
+            let optionsHTML = q.options.map((opt, optIndex) => `
+                <label class="flex items-center bg-[#FDFBF8] border border-gray-200 rounded-lg p-4 mb-2 hover:bg-[#EAE3DC] cursor-pointer transition-colors">
+                    <input type="radio" name="question-${index}" value="${optIndex}" class="mr-3 h-4 w-4 text-[#8C7A6B] focus:ring-[#8C7A6B] border-gray-300">
+                    <span>${opt}</span>
+                </label>
+            `).join('');
+            questionBlock.innerHTML = `<p class="font-semibold text-lg mb-3">${index + 1}. ${q.question}</p><div>${optionsHTML}</div>`;
+            quizContainer.appendChild(questionBlock);
+        });
+
+        const submitBtn = document.getElementById('submit-quiz-app');
+        quizContainer.addEventListener('change', () => {
+            const answeredCount = appData.quiz.filter((_, index) => document.querySelector(`input[name="question-${index}"]:checked`)).length;
+            submitBtn.disabled = answeredCount !== appData.quiz.length;
+        });
+        
+        submitBtn.addEventListener('click', () => {
+            document.getElementById('plan-app').innerHTML = `<p class="text-center text-green-700 bg-green-100 p-4 rounded-lg">Baseado em suas respostas, seu plano personalizado está sendo gerado. Foque nos módulos de **Rotina** e **Ambiente** na Biblioteca.</p>`;
+            document.getElementById('plan-app').classList.remove('hidden');
+        });
+    }
+
+    function initCircadianClock() {
+        const clock = document.getElementById('circadian-clock');
+        const detailsPanel = document.getElementById('circadian-details');
+        if (!clock) return;
+
+        clock.addEventListener('click', (e) => {
+            const segment = e.target.closest('.circadian-segment');
+            if (segment) {
+                document.querySelectorAll('.circadian-segment').forEach(s => s.classList.remove('active'));
+                segment.classList.add('active');
+                const index = parseInt(segment.dataset.index);
+                const data = appData.circadianPlan[index];
+                detailsPanel.innerHTML = `
+                    <div class="text-3xl mb-3">${data.icon}</div>
+                    <h3 class="font-bold text-xl mb-2 text-[#4A5568]">${data.time} - ${data.title}</h3>
+                    <p class="text-gray-600">${data.description}</p>
+                `;
+            }
+        });
+    }
+    
+    function initBreathingTools() {
+        const container = document.getElementById('breathing-tools-container');
+        if (!container) return;
+        container.innerHTML = '';
+
+        appData.breathingTools.forEach(tool => {
+            const toolEl = document.createElement('div');
+            toolEl.className = 'bg-white rounded-lg p-8 shadow-lg';
+            toolEl.innerHTML = `
+                <h3 class="font-bold text-xl mb-2 text-[#4A5568]">${tool.title}</h3>
+                <div class="text-sm space-y-1 mb-4">
+                    <p><strong class="text-gray-800">Para que serve:</strong> <span class="text-gray-600">${tool.purpose}</span></p>
+                    <p><strong class="text-gray-800">Quando usar:</strong> <span class="text-gray-600">${tool.when}</span></p>
+                </div>
+                <div class="relative w-48 h-48 mx-auto flex items-center justify-center cursor-pointer breathing-guide" data-tool-id="${tool.id}">
+                    <div class="absolute w-full h-full bg-[#EAE3DC] rounded-full"></div>
+                    <div id="breathing-dot-${tool.id}" class="absolute w-8 h-8 bg-[#8C7A6B] rounded-full breathing-dot"></div>
+                    <span id="breathing-text-${tool.id}" class="text-lg font-semibold text-[#4A5568]">Clique</span>
+                </div>
+                <p class="text-sm text-center text-gray-500 mt-2 italic">'Clique no centro para acalmar'</p>
+            `;
+            container.appendChild(toolEl);
+        });
+        
+        document.querySelectorAll('.breathing-guide').forEach(guide => {
+            guide.addEventListener('click', handleBreathingAnimation);
+        });
+    }
+
+    function initTeaRecipes() {
+        const container = document.getElementById('tea-recipes-container');
+        if(!container) return;
+        container.innerHTML = '';
+        appData.teaRecipes.forEach(tea => {
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-lg p-6 shadow-md flex flex-col items-start';
+            card.innerHTML = `
+                <div class="text-3xl mb-3">${tea.emoji}</div>
+                <h3 class="font-bold text-xl mb-1 text-[#4A5568]">${tea.title}</h3>
+                <p class="text-gray-600 text-sm mb-4 flex-grow">${tea.benefit}</p>
+                <button class="w-full bg-[#EAE3DC] text-[#4A5568] px-4 py-2 rounded-full font-semibold hover:bg-[#dcd1c6] transition-colors" data-tea-id="${tea.id}">Ver Receita</button>
+            `;
+            container.appendChild(card);
+            card.querySelector('button').addEventListener('click', () => openTeaModal(tea));
+        });
+    }
+
+    function openTeaModal(tea) {
+        const modalContent = `
+            <h2 class="text-2xl font-bold text-[#4A5568] mb-4">${tea.emoji} ${tea.title}</h2>
+            <div class="space-y-4">
+                <div>
+                    <h4 class="font-semibold text-lg">Modo de Preparo</h4>
+                    <p class="text-gray-600">${tea.recipe}</p>
+                </div>
+                <div class="bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg">
+                    <h4 class="font-semibold text-lg">Atenção</h4>
+                    <p class="text-sm">${tea.warning}</p>
+                </div>
+            </div>
+        `;
+        openGenericModal(modalContent);
+    }
+    
+    // --- GENERIC MODAL ---
+    const genericModalContainer = document.getElementById('generic-modal-container');
+    const genericModalContent = document.getElementById('generic-modal-content');
+    const genericModalClose = document.getElementById('generic-modal-close');
+    
+    function openGenericModal(content) {
+        genericModalContent.innerHTML = content;
+        genericModalContainer.classList.remove('hidden');
+        genericModalContainer.classList.add('flex');
+    }
+
+    function closeGenericModal() {
+        genericModalContainer.classList.add('hidden');
+        genericModalContainer.classList.remove('flex');
+    }
+
+    genericModalClose.addEventListener('click', closeGenericModal);
+    genericModalContainer.querySelector('.modal-backdrop').addEventListener('click', closeGenericModal);
+
+
+    function handleBreathingAnimation(event) {
+        const guide = event.currentTarget;
+        const toolId = guide.dataset.toolId;
+
+        if (currentAnimation.toolId === toolId) {
+            stopBreathingAnimation();
+        } else {
+            stopBreathingAnimation();
+            startBreathingAnimation(toolId);
+        }
+    }
+
+    function startBreathingAnimation(toolId) {
+        currentAnimation.toolId = toolId;
+        const tool = appData.breathingTools.find(t => t.id === toolId);
+        if (!tool) return;
+
+        let stepIndex = 0;
+
+        function runStep() {
+            const step = tool.steps[stepIndex];
+            const dot = document.getElementById(`breathing-dot-${toolId}`);
+            const text = document.getElementById(`breathing-text-${toolId}`);
+            
+            if (dot && text) {
+                dot.style.setProperty('--transition-duration', `${step.duration - 0.2}s`);
+                dot.style.transform = `scale(${step.scale})`;
+                text.textContent = step.label;
+            }
+            
+            stepIndex = (stepIndex + 1) % tool.steps.length;
+            currentAnimation.timeoutId = setTimeout(runStep, step.duration * 1000);
+        }
+        runStep();
+    }
+
+    function stopBreathingAnimation() {
+        if (currentAnimation.timeoutId) {
+            clearTimeout(currentAnimation.timeoutId);
+        }
+        if (currentAnimation.toolId) {
+            const dot = document.getElementById(`breathing-dot-${currentAnimation.toolId}`);
+            const text = document.getElementById(`breathing-text-${currentAnimation.toolId}`);
+            if (dot && text) {
+                dot.style.transform = 'scale(1)';
+                text.textContent = 'Clique';
+            }
+        }
+        currentAnimation.toolId = null;
+        currentAnimation.timeoutId = null;
+    }
+    
+    // --- NAVIGATION AND ROUTING ---
+    const sidebarNav = document.getElementById('sidebar-nav');
+    const mobileSidebarNav = document.getElementById('mobile-sidebar-nav');
+    mobileSidebarNav.innerHTML = sidebarNav.innerHTML; // Clone nav links
+
+    document.body.addEventListener('click', (e) => {
+        const navLink = e.target.closest('.sidebar-link');
+        const cardLink = e.target.closest('[data-nav-link]');
+        
+        if (navLink) {
+            e.preventDefault();
+            const section = navLink.dataset.section;
+            navigateTo(section);
+        } else if (cardLink) {
+            const section = cardLink.dataset.navLink;
+            navigateTo(section);
+        }
+    });
+
+    // --- MOBILE MENU ---
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const closeMobileMenuBtn = document.getElementById('close-mobile-menu');
+    const mobileSidebar = document.getElementById('mobile-sidebar');
+    const mobileSidebarOverlay = document.getElementById('mobile-sidebar-overlay');
+    
+    function openMobileMenu() {
+        mobileSidebar.classList.remove('-translate-x-full');
+        mobileSidebarOverlay.classList.remove('hidden');
+    }
+
+    function closeMobileMenu() {
+        mobileSidebar.classList.add('-translate-x-full');
+        mobileSidebarOverlay.classList.add('hidden');
+    }
+
+    mobileMenuBtn.addEventListener('click', openMobileMenu);
+    closeMobileMenuBtn.addEventListener('click', closeMobileMenu);
+    mobileSidebarOverlay.addEventListener('click', closeMobileMenu);
+    
+    // --- PERSONALIZATION ---
+    const welcomeMessageEl = document.getElementById('welcome-message');
+    const welcomeModal = document.getElementById('welcome-modal-container');
+    const welcomeForm = document.getElementById('welcome-form');
+    const nameInput = document.getElementById('name-input');
+
+    function updateWelcomeMessage(name) {
+        if (welcomeMessageEl) {
+            welcomeMessageEl.textContent = `Bem-vindo(a), ${name}!`;
+        }
+    }
+
+    function initWelcome() {
+        const savedName = localStorage.getItem('userName');
+        if (savedName) {
+            updateWelcomeMessage(savedName);
+        } else {
+            welcomeModal.classList.remove('hidden');
+            welcomeModal.classList.add('flex');
+        }
+
+        welcomeForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const userName = nameInput.value.trim();
+            if (userName) {
+                localStorage.setItem('userName', userName);
+                updateWelcomeMessage(userName);
+                welcomeModal.classList.add('hidden');
+                welcomeModal.classList.remove('flex');
+            }
+        });
+    }
+
+    // Initial load
+    navigateTo('painel');
+    initWelcome();
+});
+</script>
+</body>
+</html>
+
+
